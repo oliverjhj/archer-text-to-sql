@@ -1,0 +1,303 @@
+# Evaluation cases for the Archer text-to-SQL pipeline.
+#
+# Every case states what the pipeline should do, not how. SQL is graded by
+# executing both the expected and the generated query against the dataset and
+# comparing result sets, so a query that reaches the right answer by different
+# means is correct - which is the point. String comparison would fail perfectly
+# good SQL and is not what anyone means by accuracy.
+#
+# Fields:
+#   id            stable identifier, used in reports
+#   question      the natural-language input
+#   route         expected classifier decision: data | chat
+#   category      grouping for the results table
+#   expected_sql  reference query (data cases only)
+#   ordered       true when row order is part of correctness (top-N questions)
+#
+# Names used in questions come from the generated dataset, so they are
+# reproducible: regenerating with the same seed keeps these cases valid.
+
+# ---------------------------------------------------------------------------
+# Aggregates
+# ---------------------------------------------------------------------------
+
+- id: total-revenue-2025
+  question: What was the total revenue in 2025?
+  route: data
+  category: aggregate
+  expected_sql: >
+    SELECT SUM(revenue) FROM sales_data
+    WHERE STRFTIME('%Y', document_date) = '2025'
+
+- id: total-revenue-all-time
+  question: What is the total revenue across the whole database?
+  route: data
+  category: aggregate
+  expected_sql: SELECT SUM(revenue) FROM sales_data
+
+- id: deal-count-2024
+  question: How many deals were there in 2024?
+  route: data
+  category: aggregate
+  expected_sql: >
+    SELECT COUNT(DISTINCT document_number) FROM sales_data
+    WHERE STRFTIME('%Y', document_date) = '2024'
+
+- id: line-count-2024
+  question: How many sales lines were there in 2024?
+  route: data
+  category: aggregate
+  expected_sql: >
+    SELECT COUNT(*) FROM sales_data
+    WHERE STRFTIME('%Y', document_date) = '2024'
+
+- id: software-revenue-total
+  question: What is our total software revenue?
+  route: data
+  category: aggregate
+  expected_sql: SELECT SUM(revenue) FROM sales_data WHERE item_group = 'IBM SOFT'
+
+- id: hardware-revenue-2023
+  question: What was the total hardware revenue in 2023?
+  route: data
+  category: aggregate
+  expected_sql: >
+    SELECT SUM(revenue) FROM sales_data
+    WHERE item_group = 'IBM CCHW' AND STRFTIME('%Y', document_date) = '2023'
+
+- id: services-revenue-total
+  question: What is the total services revenue?
+  route: data
+  category: aggregate
+  expected_sql: SELECT SUM(revenue) FROM sales_data WHERE item_group = 'IBM SERV'
+
+- id: revenue-march-2025
+  question: What was the total revenue in March 2025?
+  route: data
+  category: aggregate
+  expected_sql: >
+    SELECT SUM(revenue) FROM sales_data
+    WHERE STRFTIME('%Y-%m', document_date) = '2025-03'
+
+- id: credit-total
+  question: What is the total value of all credits?
+  route: data
+  category: aggregate
+  expected_sql: SELECT SUM(revenue) FROM sales_data WHERE document_type = 'Credit'
+
+- id: distinct-customer-count
+  question: How many different partners are there?
+  route: data
+  category: aggregate
+  expected_sql: SELECT COUNT(DISTINCT customer_name) FROM sales_data
+
+# ---------------------------------------------------------------------------
+# Ranking
+# ---------------------------------------------------------------------------
+
+- id: top-5-customers
+  question: Show me the top 5 customers by revenue
+  route: data
+  category: ranking
+  ordered: true
+  expected_sql: >
+    SELECT customer_name, SUM(revenue) FROM sales_data
+    GROUP BY customer_name ORDER BY SUM(revenue) DESC LIMIT 5
+
+- id: top-3-end-users
+  question: Which 3 end users have the highest revenue?
+  route: data
+  category: ranking
+  ordered: true
+  expected_sql: >
+    SELECT end_user_company_name, SUM(revenue) FROM sales_data
+    GROUP BY end_user_company_name ORDER BY SUM(revenue) DESC LIMIT 3
+
+- id: top-10-products
+  question: What are the top 10 products by revenue?
+  route: data
+  category: ranking
+  ordered: true
+  expected_sql: >
+    SELECT item_description, SUM(revenue) FROM sales_data
+    GROUP BY item_description ORDER BY SUM(revenue) DESC LIMIT 10
+
+# The reference here returns the full deal lines, not just the document
+# number. That is what the prompt instructs for "show me the biggest deal":
+# a deal is a set of lines, and the user asked to see it. The first version of
+# this case expected a bare document_number and failed the model for obeying
+# its own documented behaviour - a reminder that a wrong reference query is
+# worse than no eval at all, because it manufactures a bug report.
+- id: biggest-deal-2025
+  question: Show me the biggest deal of 2025
+  route: data
+  category: ranking
+  ordered: true
+  expected_sql: >
+    SELECT customer_name, document_date, document_number, item_group,
+    item_description, revenue, end_user_company_name, quantity
+    FROM sales_data
+    WHERE document_number IN (
+      SELECT document_number FROM sales_data
+      WHERE STRFTIME('%Y', document_date) = '2025'
+      GROUP BY document_number ORDER BY SUM(revenue) DESC LIMIT 1)
+    ORDER BY document_number, document_date DESC
+
+# ---------------------------------------------------------------------------
+# Filtering
+# ---------------------------------------------------------------------------
+
+- id: revenue-for-named-customer
+  question: What was the total revenue for Galaxy Crest Global PLC?
+  route: data
+  category: filter
+  expected_sql: >
+    SELECT SUM(revenue) FROM sales_data
+    WHERE LOWER(customer_name) LIKE LOWER('%Galaxy Crest Global%')
+
+- id: deals-for-customer-in-year
+  question: How many deals did Aurora Harbour Partners PLC do in 2024?
+  route: data
+  category: filter
+  expected_sql: >
+    SELECT COUNT(DISTINCT document_number) FROM sales_data
+    WHERE LOWER(customer_name) LIKE LOWER('%Aurora Harbour Partners%')
+    AND STRFTIME('%Y', document_date) = '2024'
+
+- id: hardware-deals-for-customer
+  question: How many hardware deals did Helix Bridge Holdings Ltd do?
+  route: data
+  category: filter
+  expected_sql: >
+    SELECT COUNT(DISTINCT document_number) FROM sales_data
+    WHERE item_group = 'IBM CCHW'
+    AND LOWER(customer_name) LIKE LOWER('%Helix Bridge Holdings%')
+
+- id: revenue-between-dates
+  question: What was the total revenue between 1 January 2022 and 31 March 2022?
+  route: data
+  category: filter
+  expected_sql: >
+    SELECT SUM(revenue) FROM sales_data
+    WHERE document_date >= '2022-01-01' AND document_date <= '2022-03-31'
+
+- id: multi-year-deals
+  question: How many deals are flagged as multi-year deals?
+  route: data
+  category: filter
+  expected_sql: >
+    SELECT COUNT(DISTINCT document_number) FROM sales_data
+    WHERE multi_year_deal_flag_so = 'Yes'
+
+- id: revenue-by-item-group
+  question: Show total revenue broken down by item group
+  route: data
+  category: filter
+  expected_sql: >
+    SELECT item_group, SUM(revenue) FROM sales_data GROUP BY item_group
+
+# ---------------------------------------------------------------------------
+# Existence checks
+#
+# This category exists because it was a known failure mode: the model used to
+# answer "does X exist" with a COUNT, which cannot distinguish "no match" from
+# "the query was wrong". The prompt was changed to return matching names.
+# ---------------------------------------------------------------------------
+
+- id: existence-partner-present
+  question: Is there a partner called Galaxy?
+  route: data
+  category: existence
+  expected_sql: >
+    SELECT DISTINCT customer_name FROM sales_data
+    WHERE LOWER(customer_name) LIKE LOWER('%galaxy%') LIMIT 100
+
+- id: existence-partner-absent
+  question: Is there a partner called Teapots?
+  route: data
+  category: existence
+  expected_sql: >
+    SELECT DISTINCT customer_name FROM sales_data
+    WHERE LOWER(customer_name) LIKE LOWER('%teapots%') LIMIT 100
+
+- id: existence-end-user
+  question: Do we have any end users with Helix in the name?
+  route: data
+  category: existence
+  expected_sql: >
+    SELECT DISTINCT end_user_company_name FROM sales_data
+    WHERE LOWER(end_user_company_name) LIKE LOWER('%helix%') LIMIT 100
+
+- id: existence-partner-substring
+  question: Can you find partners with global in the name?
+  route: data
+  category: existence
+  expected_sql: >
+    SELECT DISTINCT customer_name FROM sales_data
+    WHERE LOWER(customer_name) LIKE LOWER('%global%') LIMIT 100
+
+- id: existence-product
+  question: Do we sell anything called Maximo?
+  route: data
+  category: existence
+  expected_sql: >
+    SELECT DISTINCT item_description FROM sales_data
+    WHERE LOWER(item_description) LIKE LOWER('%maximo%') LIMIT 100
+
+# ---------------------------------------------------------------------------
+# Listing
+# ---------------------------------------------------------------------------
+
+- id: distinct-partners-in-month
+  question: Show me all unique partners who did deals in March 2025
+  route: data
+  category: listing
+  expected_sql: >
+    SELECT DISTINCT customer_name FROM sales_data
+    WHERE STRFTIME('%Y-%m', document_date) = '2025-03'
+    ORDER BY customer_name LIMIT 100
+
+- id: distinct-item-groups
+  question: What item groups are in the database?
+  route: data
+  category: listing
+  expected_sql: SELECT DISTINCT item_group FROM sales_data
+
+- id: distinct-vendors
+  question: List the distinct vendor names
+  route: data
+  category: listing
+  expected_sql: SELECT DISTINCT vendor_name FROM sales_data
+
+# ---------------------------------------------------------------------------
+# Conversational routing
+#
+# These have no SQL. They test only that the classifier keeps them away from
+# the database, which is where the pipeline is most likely to waste a call or
+# produce nonsense.
+# ---------------------------------------------------------------------------
+
+- id: chat-greeting
+  question: Hello!
+  route: chat
+  category: conversation
+
+- id: chat-capability
+  question: Who are you and what can you do?
+  route: chat
+  category: conversation
+
+- id: chat-off-topic-creative
+  question: Write me a poem about the sea
+  route: chat
+  category: conversation
+
+- id: chat-off-topic-knowledge
+  question: What is the capital of Australia?
+  route: chat
+  category: conversation
+
+- id: chat-thanks
+  question: Thanks, that is really helpful
+  route: chat
+  category: conversation

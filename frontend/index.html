@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Archer Text-to-SQL</title>
+    <script>
+      /*
+        Apply the stored theme before first paint. React sets this attribute
+        too, but not until it mounts - which is late enough to show a flash of
+        the wrong background. The key is shared with the login page.
+      */
+      (function () {
+        try {
+          if (window.localStorage.getItem('archer-theme') === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch (e) {
+          /* Storage unavailable. Dark is a fine default. */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

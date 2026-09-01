@@ -1,0 +1,61 @@
+# =============================================================
+# Archer Text-to-SQL - Docker build context exclusions
+# Applies when building from repo root:
+#   docker build -f backend/Dockerfile .
+# Do NOT exclude backend/ - it is required by the Docker build.
+# =============================================================
+
+# Secrets and runtime data - never bake into image
+.env
+.env.*
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Version control
+.git/
+.gitignore
+
+# Local Python environment
+.venv/
+
+# Python bytecode
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Python tooling caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.uv/
+
+# IDE and OS artefacts
+.vscode/
+Thumbs.db
+desktop.ini
+*.log
+*.bak
+*.backup
+
+# Build artefacts
+dist/
+build/
+*.egg-info/
+
+# Bob / editor tooling
+.bob/
+
+# Non-backend content not needed in image
+docs/
+# frontend/ is NOT excluded: the image build stage compiles it.
+# Only its generated directories are.
+frontend/node_modules/
+frontend/dist/
+infrastructure/
+README.md
+.pre-commit-config.yaml
+.github/

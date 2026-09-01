@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Archer - natural-language querying over a sales database">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Archer AI - Login</title>
+    <script>
+        /*
+          Applied before the stylesheet paints, deliberately.
+
+          Setting the theme from a script at the end of the body would render
+          the default first and then repaint - a white flash on a dark page,
+          which looks broken rather than fast. Doing it here costs one
+          synchronous localStorage read before first paint.
+
+          Dark is the default. The key is shared with the React application so
+          a choice made on either side carries across the login.
+        */
+        (function () {
+            try {
+                var stored = window.localStorage.getItem('archer-theme');
+                if (stored === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch (e) {
+                /* Private browsing, or storage disabled. Dark is a fine default. */
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch between dark and light theme">
+                <span id="theme-toggle-label">Light</span>
+            </button>
+
+            <!-- Logo/Header Section -->
+            <div class="login-header">
+                <h1>Archer AI</h1>
+                <p>Natural-language querying over sales data</p>
+            </div>
+            
+            <!-- Login Form -->
+            <form action="/login" method="POST">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        autocomplete="username"
+                        required 
+                        autofocus
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+                
+                <!-- CRITICAL: Exact button structure for CSRF token injection by backend -->
+                <button type="submit" class="login-btn">Sign In</button>
+            </form>
+
+            <!--
+                The demo credentials are shown here deliberately.
+
+                This is a public portfolio demo over synthetic data, so the
+                login wall is a speed bump against crawlers rather than a
+                security control. Sending a visitor off to find credentials in
+                a README is friction with nothing on the other side of it.
+
+                The data behind this login is generated - see
+                scripts/generate_dataset.py - and the database is read-only.
+            -->
+            <div class="login-footer">
+                <p><strong>Demo access</strong> &mdash; <code>demo</code> / <code>archer-demo-2026</code></p>
+                <p>Synthetic data. The demo scales to zero when idle, so the first question may take a few seconds.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var root = document.documentElement;
+            var button = document.getElementById('theme-toggle');
+            var label = document.getElementById('theme-toggle-label');
+
+            function currentTheme() {
+                return root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+            }
+
+            // The button offers the theme you would switch TO, not the one you
+            // are in - "Light" while dark. Labelling it with the current state
+            // reads as a status display and people click it expecting nothing
+            // to happen.
+            function render() {
+                label.textContent = currentTheme() === 'light' ? 'Dark' : 'Light';
+            }
+
+            button.addEventListener('click', function () {
+                var next = currentTheme() === 'light' ? 'dark' : 'light';
+                if (next === 'light') {
+                    root.setAttribute('data-theme', 'light');
+                } else {
+                    root.removeAttribute('data-theme');
+                }
+                try {
+                    window.localStorage.setItem('archer-theme', next);
+                } catch (e) {
+                    /* Preference will not persist; the toggle still works. */
+                }
+                render();
+            });
+
+            render();
+        })();
+    </script>
+</body>
+</html>

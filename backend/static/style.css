@@ -1,0 +1,240 @@
+/* =============================================================
+   Archer Text-to-SQL - login page styles
+   =============================================================
+
+   This stylesheet serves exactly one page: templates/login.html.
+
+   It replaces a 35KB file that mostly styled the landing and chat
+   pages, both of which were removed when the React application took
+   over. Dead CSS in a public repository is noise a reader has to
+   discount, so it went with them.
+
+   Theming matches the application. Dark is the default because the
+   application is dark, and a visitor signing in should not be thrown
+   from a pale card into a black interface. The preference is stored
+   under the same localStorage key the React app reads, so a choice
+   made here carries through the login.
+   ============================================================= */
+
+/* Dark is the default: no attribute needed. */
+:root {
+  --surface: #161616;
+  --surface-raised: #262626;
+  --surface-input: #393939;
+  --text-primary: #f4f4f4;
+  --text-secondary: #c6c6c6;
+  --text-muted: #8d8d8d;
+  --border: #393939;
+  --border-strong: #6f6f6f;
+  --accent: #0f62fe;
+  --accent-hover: #0353e9;
+  --accent-text: #ffffff;
+  --error-surface: #3d1416;
+  --error-text: #ff8389;
+  --focus: #ffffff;
+
+  --radius: 4px;
+  --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light is opt-in, via the toggle. Only the colours change. */
+:root[data-theme='light'] {
+  --surface: #f4f4f4;
+  --surface-raised: #ffffff;
+  --surface-input: #ffffff;
+  --text-primary: #161616;
+  --text-secondary: #525252;
+  --text-muted: #6f6f6f;
+  --border: #e0e0e0;
+  --border-strong: #8d8d8d;
+  --accent: #0f62fe;
+  --accent-hover: #0353e9;
+  --accent-text: #ffffff;
+  --error-surface: #fff1f1;
+  --error-text: #da1e28;
+  --focus: #0f62fe;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, Helvetica, Arial, sans-serif;
+  background: var(--surface);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.login-card {
+  position: relative;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem 2rem;
+}
+
+/* --- Theme toggle ------------------------------------------------------- */
+
+.theme-toggle {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.theme-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* --- Header ------------------------------------------------------------- */
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0 0 0.375rem;
+  color: var(--text-primary);
+}
+
+.login-header p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* --- Form --------------------------------------------------------------- */
+
+.login-card form {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  margin-bottom: 0.375rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  /* Carbon's input convention: a heavier bottom edge. */
+  border-bottom-color: var(--border-strong);
+  border-radius: var(--radius) var(--radius) 0 0;
+  transition: border-color var(--transition);
+}
+
+.form-group input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--accent-text);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.login-btn:hover {
+  background: var(--accent-hover);
+}
+
+.login-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* --- Error and footer --------------------------------------------------- */
+
+.login-error {
+  text-align: center;
+  color: var(--error-text);
+  background: var(--error-surface);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+}
+
+.login-footer {
+  text-align: center;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.login-footer p {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.login-footer p + p {
+  margin-top: 0.5rem;
+}
+
+.login-footer code {
+  font-family: 'IBM Plex Mono', 'Courier New', monospace;
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+}

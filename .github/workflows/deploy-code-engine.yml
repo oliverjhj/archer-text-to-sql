@@ -1,0 +1,90 @@
+# .github/workflows/deploy-code-engine.yml
+# Archer Text-to-SQL - Deploy backend to IBM Code Engine.
+#
+# Trigger: Manual only (workflow_dispatch).
+#
+# This workflow builds the Docker image from the repo root, pushes it to IBM
+# Container Registry, and updates the existing Code Engine application to use
+# the new image.
+#
+# Runtime environment variables and secrets are managed in Code Engine directly
+# and are not read or modified by this workflow.
+#
+# One-time IBM Cloud prerequisites must be completed before the first manual
+# run, including GitHub secret/variable setup and any required Code Engine
+# build association cleanup.
+#
+# Required GitHub Secret:
+#   IBM_CLOUD_API_KEY
+#
+# Required GitHub Variables:
+#   IBM_CLOUD_REGION
+#   IBM_CLOUD_RESOURCE_GROUP
+#   IBM_CODE_ENGINE_PROJECT
+#   IBM_CODE_ENGINE_APP
+#   IBM_CONTAINER_REGISTRY_NAMESPACE
+#   IBM_CONTAINER_REGISTRY_HOSTNAME     (public push hostname, e.g. uk.icr.io)
+#   IBM_CODE_ENGINE_IMAGE_HOSTNAME      (private pull hostname, e.g. private.uk.icr.io)
+#   IBM_CODE_ENGINE_REGISTRY_SECRET     (name of the CE registry secret for private pull)
+
+name: Deploy to IBM Code Engine
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build, push, and deploy
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install IBM Cloud CLI and plugins
+        run: |
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+          ibmcloud plugin install container-registry --quiet
+          ibmcloud plugin install code-engine --quiet
+
+      - name: Log in to IBM Cloud
+        run: |
+          ibmcloud login \
+            --apikey "${{ secrets.IBM_CLOUD_API_KEY }}" \
+            -r "${{ vars.IBM_CLOUD_REGION }}" \
+            -g "${{ vars.IBM_CLOUD_RESOURCE_GROUP }}"
+
+      - name: Log in to IBM Container Registry
+        run: ibmcloud cr login
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f backend/Dockerfile \
+            -t "${{ vars.IBM_CONTAINER_REGISTRY_HOSTNAME }}/${{ vars.IBM_CONTAINER_REGISTRY_NAMESPACE }}/archer-backend:${{ github.sha }}" \
+            -t "${{ vars.IBM_CONTAINER_REGISTRY_HOSTNAME }}/${{ vars.IBM_CONTAINER_REGISTRY_NAMESPACE }}/archer-backend:latest" \
+            .
+
+      - name: Push image to IBM Container Registry
+        run: |
+          docker push "${{ vars.IBM_CONTAINER_REGISTRY_HOSTNAME }}/${{ vars.IBM_CONTAINER_REGISTRY_NAMESPACE }}/archer-backend:${{ github.sha }}"
+          docker push "${{ vars.IBM_CONTAINER_REGISTRY_HOSTNAME }}/${{ vars.IBM_CONTAINER_REGISTRY_NAMESPACE }}/archer-backend:latest"
+
+      - name: Select Code Engine project
+        run: |
+          ibmcloud ce project select \
+            --name "${{ vars.IBM_CODE_ENGINE_PROJECT }}"
+
+      - name: Update Code Engine application image
+        run: |
+          ibmcloud ce application update \
+            --name "${{ vars.IBM_CODE_ENGINE_APP }}" \
+            --image "${{ vars.IBM_CODE_ENGINE_IMAGE_HOSTNAME }}/${{ vars.IBM_CONTAINER_REGISTRY_NAMESPACE }}/archer-backend:${{ github.sha }}" \
+            --registry-secret "${{ vars.IBM_CODE_ENGINE_REGISTRY_SECRET }}"
+
+      - name: Show application URL
+        run: |
+          ibmcloud ce application get \
+            --name "${{ vars.IBM_CODE_ENGINE_APP }}" \
+            --output url

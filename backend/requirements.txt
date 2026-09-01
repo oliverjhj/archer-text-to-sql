@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+langchain_ibm
+slowapi
+python-multipart
+itsdangerous
+pyjwt[crypto]
+python-dotenv

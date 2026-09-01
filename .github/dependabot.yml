@@ -1,0 +1,62 @@
+# .github/dependabot.yml
+# Archer Text-to-SQL - Automated dependency update configuration.
+#
+# Monitors:
+#   - Python pip dependencies in backend/requirements.txt
+#   - GitHub Actions workflow dependencies
+#   - Docker base image in backend/Dockerfile
+#
+# Cadence: weekly, Monday morning, to minimise PR noise.
+
+version: 2
+
+updates:
+  # Python pip dependencies
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    groups:
+      python-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # GitHub Actions workflow dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    groups:
+      actions-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Docker base image dependencies
+  # Major and minor Python runtime upgrades are ignored here.
+  # Runtime Python version changes are handled as deliberate compatibility tasks.
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "python"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+    commit-message:
+      prefix: "chore(deps)"
