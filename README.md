@@ -2,9 +2,17 @@
 
 **Ask a sales database a question in English. Get the answer, and the SQL that produced it.**
 
+[![CI](https://github.com/oliverjhj/archer-text-to-sql/actions/workflows/ci.yml/badge.svg)](https://github.com/oliverjhj/archer-text-to-sql/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-109%20passing-brightgreen)](docs/testing.md)
+[![Execution accuracy](https://img.shields.io/badge/execution%20accuracy-100%25%20on%2033%20cases-blue)](docs/evals.md)
+[![Python](https://img.shields.io/badge/python-3.12-blue)](backend/pyproject.toml)
+[![Licence](https://img.shields.io/badge/licence-Apache%202.0-blue)](LICENSE)
+
 [**Live demo**](https://archer.2e8toyh6lcs9.eu-gb.codeengine.appdomain.cloud) &nbsp;·&nbsp; sign in with `demo` / `archer-demo-2026`
 
 Built on IBM watsonx.ai, FastAPI and React. Deployed on IBM Code Engine.
+
+![Archer answering two questions, each with the SQL it generated](docs/images/demo.png)
 
 ---
 
@@ -67,11 +75,7 @@ weakness.
 
 ## Architecture
 
-```
-browser ──▶ FastAPI ──▶ classifier ──┬── data ──▶ SQL generator ──▶ SQLite
-                                     └── chat ──▶ conversational reply
-                                              (IBM watsonx.ai)
-```
+![How a question becomes an answer: FastAPI claims a daily budget, a classifier routes the question, and either the SQL generator queries a read-only SQLite database or a conversational prompt answers it](docs/images/architecture.svg)
 
 Classification is a separate model call. A combined prompt would have to decide
 *and* produce SQL in one pass, and a model shown fifteen SQL examples will write
