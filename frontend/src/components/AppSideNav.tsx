@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import {
   SideNav,
   SideNavDivider,
@@ -6,9 +7,18 @@ import {
 } from '@carbon/react';
 import { Chat, Help, Search } from '@carbon/icons-react';
 
+const REPO_URL = 'https://github.com/oliverjhj/archer-text-to-sql';
+
+interface AppSideNavProps {
+  onOpenSchema: () => void;
+}
+
 // Primary side navigation (IBM Carbon UI Shell).
-// Static links for the Phase 4B shell; destinations are wired in later phases.
-export function AppSideNav() {
+//
+// Every item here does something. They were previously href="#" placeholders,
+// which is worse than having no navigation at all: a visitor clicks, nothing
+// happens, and the whole interface reads as a mockup.
+export function AppSideNav({ onOpenSchema }: AppSideNavProps) {
   return (
     <SideNav
       aria-label="Primary navigation"
@@ -20,12 +30,24 @@ export function AppSideNav() {
         <SideNavLink renderIcon={Chat} href="#" isActive>
           Ask
         </SideNavLink>
-        <SideNavLink renderIcon={Search} href="#">
+        <SideNavLink
+          renderIcon={Search}
+          href="#"
+          onClick={(event: MouseEvent) => {
+            event.preventDefault();
+            onOpenSchema();
+          }}
+        >
           Schema reference
         </SideNavLink>
         <SideNavDivider />
-        <SideNavLink renderIcon={Help} href="#">
-          Help
+        <SideNavLink
+          renderIcon={Help}
+          href={REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Source and docs
         </SideNavLink>
       </SideNavItems>
     </SideNav>

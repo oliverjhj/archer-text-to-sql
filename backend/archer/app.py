@@ -16,7 +16,7 @@ from .core.logging import configure_logging
 from .core.security_headers import SecurityHeadersMiddleware
 from .core.limiter import limiter
 from .db.database import verify_database
-from .api import auth_routes, page_routes, ask
+from .api import auth_routes, page_routes, ask, schema_routes
 
 # Configure logging
 configure_logging()
@@ -104,4 +104,5 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(auth_routes.router)
 app.include_router(page_routes.router)
 app.include_router(ask.router)
+app.include_router(schema_routes.router)
 
