@@ -44,8 +44,18 @@ updates:
       prefix: "chore(deps)"
 
   # Docker base image dependencies
-  # Major and minor Python runtime upgrades are ignored here.
-  # Runtime Python version changes are handled as deliberate compatibility tasks.
+  #
+  # Both base images are pinned deliberately and are not Dependabot's to move:
+  #
+  #   python  the runtime version is a compatibility decision, taken when the
+  #           test suite has been run against it
+  #   node    the frontend build stage is on 20 LTS to match the CI job, so
+  #           that CI and the image agree on the version that actually
+  #           produces the artefact. Dependabot offered 26-slim within minutes
+  #           of this repository existing, which would have quietly broken
+  #           that agreement.
+  #
+  # Patch updates still come through, which is where the security fixes are.
   - package-ecosystem: "docker"
     directory: "/backend"
     schedule:
@@ -55,6 +65,10 @@ updates:
     open-pull-requests-limit: 3
     ignore:
       - dependency-name: "python"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "node"
         update-types:
           - "version-update:semver-major"
           - "version-update:semver-minor"
