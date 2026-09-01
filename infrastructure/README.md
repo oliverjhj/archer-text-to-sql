@@ -77,10 +77,42 @@ path, so it runs unchanged on Fly.io, Render, Cloud Run or any container host.
 The only genuine IBM dependency is watsonx.ai, which is the point of the
 project rather than an accident of hosting.
 
+## What it costs
+
+Measured, not estimated:
+
+| Service | Plan | Cost |
+|---|---|---|
+| Code Engine | Standard | £0.00 - inside the free allowance at this traffic |
+| Container Registry | Free | £0.00 |
+| watsonx.ai Runtime | Essentials | **£0.01 per 89 Resource Units** |
+
+That puts a question at roughly **£0.00026**, and the 200-question daily
+ceiling at about **5p a day** even if the demo is hammered. It is why an
+approximate per-process counter is an adequate control rather than a
+compromise.
+
+**watsonx.ai started on the Lite plan and had to move.** Lite is genuinely
+free and fails safe - it returns `token_quota_reached` rather than billing -
+but four evaluation runs exhausted a month's allowance in a single afternoon,
+and took the live demo down with them. Lite is fine for experimenting and not
+enough for anything public. Essentials was chosen over Standard and
+Professional because it has no fixed monthly fee.
+
 ## Free-tier limits worth knowing
 
-- **Container Registry:** 512MB storage, 5GB pull traffic per month. The image
-  is roughly 209MB stored. Deploys that change only application code add a few
-  megabytes, because the dataset and dependency layers are cached.
-- **watsonx.ai Lite:** a monthly token allowance. It stops rather than bills
-  when exhausted, which is the right failure mode for a public demo.
+- **Container Registry:** 512MB storage, 5GB pull traffic per month. Each
+  deploy pushes a new SHA-tagged image at roughly 130MB, and although layers
+  are shared, **this quota does fill** - a deploy has already failed on it.
+  Old tags need clearing periodically:
+
+  ```bash
+  ibmcloud cr images                       # list
+  ibmcloud cr image-rm <image>:<old-sha>   # remove superseded tags
+  ```
+
+  The permanent fix is moving to `ghcr.io`, which is free and unlimited for
+  public images. That was not possible while the repository was private,
+  because a private image would have needed Code Engine to hold a long-lived
+  GitHub token. Now that the repository is public it is straightforward, and it
+  would remove Container Registry from the architecture entirely.

@@ -148,6 +148,14 @@ A data question costs roughly **2,300 tokens**, almost all of it the SQL
 generator's few-shot examples. A full 33-case run is therefore around 60,000
 tokens.
 
-That concentration is worth noting: **the few-shot examples are about 88% of
-the cost of every question asked.** Trimming them is the obvious optimisation
-if cost ever matters, and the suite is what would make it safe to try.
+In money, measured against the actual bill rather than estimated: **89 Resource
+Units - roughly 89,000 tokens - cost £0.01**. That puts a question at about
+**£0.00026**, a full evaluation run at under a penny, and a thousand questions
+at around **26p**.
+
+Two things follow from that. The daily ceiling of 200 questions caps the demo
+at roughly **5p a day** even if it is hammered, which is why an approximate
+per-process counter is an entirely adequate control. And the cost is so low
+that the 88% concentration in the few-shot examples is not worth optimising -
+it would be engineering effort spent to save pennies, and the examples are what
+encode the deal-versus-line distinction the system exists to get right.
