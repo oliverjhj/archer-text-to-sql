@@ -13,7 +13,7 @@
 # Node is needed to build it and is not needed to run it, so it stays in this
 # stage and never reaches the runtime image.
 # -------------------------------------------------------------
-FROM node:20-slim AS frontend-build
+FROM node:26-slim AS frontend-build
 
 WORKDIR /build
 
